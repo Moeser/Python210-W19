@@ -11,6 +11,7 @@ import random
 
 trigrams = {}
 
+# reads a file and parses sentences
 def ingest_file(filename):
   f = open(filename, "r")
   contents = f.read()
@@ -18,6 +19,7 @@ def ingest_file(filename):
   for sentence in sentences:
     process_sentence(sentence)
 
+# parses a sentence into trigrams
 def process_sentence(sentence):
   words = re.split(r'\s+', sentence)
   counter = 0
@@ -25,6 +27,7 @@ def process_sentence(sentence):
     process_trigram(words[counter:counter+3])
     counter += 1
 
+# adds a trigram to the trigram dict
 def process_trigram(trigram):
   tup = tuple(trigram[0:2])
   word = trigram[2:3]
@@ -33,12 +36,14 @@ def process_trigram(trigram):
   else:
     trigrams[tup] = word
 
+# picks a random next word based on the tuple pair provided
 def pick_next_word(pair):
   if pair in trigrams:
     choices = trigrams[pair]
     return(random.choice(choices))
   return(None)
 
+# generates an entire sentence randomly using trigrams
 def generate_sentence():
   start_words = list(random.choice(list(trigrams.keys())))
   sentence = start_words[0] + " " + start_words[1]
@@ -50,6 +55,7 @@ def generate_sentence():
     next_word = pick_next_word(tuple(previous_words))
   return(sentence.capitalize())
 
+# presents a menu and processes user input
 def main():
   i = None
   while i != "3":
