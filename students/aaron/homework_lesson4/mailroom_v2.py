@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import re
+
 donors = {'Bob Barker': {'donations': 2, 'total': 24456.24},
           'Roger Rabbit': {'donations': 1, 'total': 4930.26},
           'Bruce Lee': {'donations': 3, 'total': 52246.75},
@@ -8,12 +10,9 @@ donors = {'Bob Barker': {'donations': 2, 'total': 24456.24},
 
 # prints a main menu
 def show_main_menu():
-  print("-------------------")
-  print("1. Send a Thank You")
-  print("2. Create a Report")
-  print("3. Quit")
-
-menu_opts = {'1': send_thankyou, '2': output_report, '3': quit}
+  print("-" * 70)
+  for number, func in menu_opts.items():
+    print(f'{number}. {menu_opts_text[func]}')
 
 # gets a menu selection
 def get_main_selection():
@@ -65,25 +64,65 @@ def output_report():
   for donor in donor_list:
     print(table_formatter.format(donor[0], donor[2], donor[1], donor[2] / donor[1]))
 
-# print a thank you note for a new donation
+# print a thank you for a recent donation
 def output_thankyou(donor_name, latest_amount):
-  print("-" * 70)
-  print("From: Me <me@example.org>")
-  print(f'To: {donor_name} <generous_donor@example.org>')
-  print("Subject: Thank you.")
-  print("")
-  print(f'Dear {donor_name},')
-  print(f'  Thank you for your generous donation of {latest_amount:.2f}!')
-  print(f'That brings your total of {donors[donor_name]["donations"]} donation(s) to ${donors[donor_name]["total"]:.2f}')
-  print("Sincerely,")
-  print(" -Me")
+  print(generate_thankyou(donor_name, latest_amount, True))
+
+# write a thank you note to disk for a donor
+def write_letters():
+  for donor_name in donors.keys():
+    # convert any non-alphanumeric characters to _ for the filename
+    donor_file = re.sub(r"[^a-zA-Z0-9_-]+", "_", donor_name) + ".txt"
+
+    note = generate_thankyou(donor_name)
+    f = open(donor_file, 'w')
+    f.write(note)
+    f.close()
+    print(f'>>> Wrote thank you note for {donor_name} to {donor_file}')
+
+# generate a thank you note for a donor
+def generate_thankyou(donor_name, latest_amount=0, recent=False):
+  donations_total = donors[donor_name]["total"]
+  donations_count = donors[donor_name]["donations"]
+  format_values = {'donations_total': donations_total,
+                   'donations_count': donations_count,
+                   'donor_name': donor_name,
+                   'latest_amount': latest_amount}
+  if recent:
+    template = '''----------------------------------------------------------------------
+Dear {donor_name},
+  Thank you for your generous donation of {latest_amount:.2f}!
+That brings your total of {donations_count} donation(s) to ${donations_total:.2f}
+Sincerely,
+ -Me
+'''
+  else:
+    template = '''----------------------------------------------------------------------
+Dear {donor_name},
+  Thank you for all {donations_count} of your generous donations for a total of {donations_total:.2f}!
+We will put the money to good use.
+Sincerely,
+ -Me
+'''
+  letter = template.format(**format_values)
+  return(letter)
 
 # the main loop
 def main():
-  selection = ""
-  while selection != "3":
+  selection = "2"
+  while menu_opts[selection] != quit:
     selection = get_main_selection()
     menu_opts[selection]()
+
+# a dict for mapping user selection to functions
+menu_opts = {'1': send_thankyou,
+             '2': output_report,
+             '3': write_letters,
+             '4': quit}
+menu_opts_text = {send_thankyou: "Send a Thank You to a single donor.",
+                  output_report: "Create a report.",
+                  write_letters: "Send letters to all donors.",
+                  quit: "Quit."}
 
 if __name__ == '__main__':
   main()
